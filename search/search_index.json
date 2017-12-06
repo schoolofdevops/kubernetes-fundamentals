@@ -1,0 +1,74 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "Welcome to Chef Bootcamp by School of Devops\n\n\nThis is a Lab Guide which goes along with the Zero to Docker Course by School of Devops. \n\n\nFor information about the devops trainign courses visit \nschoolofdevops.com\n.\n\n\nTeam\n\n\n\n\nGourav Shah\n\n\nMeenachisundaram V", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#welcome-to-chef-bootcamp-by-school-of-devops", 
+            "text": "This is a Lab Guide which goes along with the Zero to Docker Course by School of Devops.   For information about the devops trainign courses visit  schoolofdevops.com .", 
+            "title": "Welcome to Chef Bootcamp by School of Devops"
+        }, 
+        {
+            "location": "/#team", 
+            "text": "Gourav Shah  Meenachisundaram V", 
+            "title": "Team"
+        }, 
+        {
+            "location": "/1. install_kubernetes/", 
+            "text": "Kubernetes\n\n\nKubernetes is an open-source system for automating deployment, scaling, and management of containerized applications.\n\n\nThe below steps are applicabe for the below mentioned OS\n\n\n\n\n\n\n\n\nOS\n\n\nVersion\n\n\nCodename\n\n\n\n\n\n\n\n\n\n\nUbuntu\n\n\n16.04\n\n\nXenial\n\n\n\n\n\n\n\n\nBase Setup\n\n\nOn all nodes which would be part of this cluster, you need to do the base setup as described on \nThis Page\n\n\nInitialization of Master:\n\n\nThis tutorial assumes \nkube-01\n  as the master and used kubeadm as a tool to install and setup the cluster. This section also assumes that you are using vagrant based setup provided along with this tutorial. If not, please update the IP address of the master accordingly.\n\n\nTo initialize master, run this on kube-01\n\n\nkubeadm init --apiserver-advertise-address 192.168.12.10 --pod-network-cidr=192.168.0.0/16\n\n\n\n\n\nInitialization of the Nodes (Previously Minions)\n\n\nAfter master being initialized, it should display the command which could be used on all worker/nodes to join the k8s cluster.\n\n\ne.g.\n\n\nkubeadm join --token c04797.8db60f6b2c0dd078 192.168.12.10:6443 --discovery-token-ca-cert-hash sha256:88ebb5d5f7fdfcbbc3cde98690b1dea9d0f96de4a7e6bf69198172debca74cd0\n\n\n\n\nCopy and paste it on all node.\n\n\nTroubleshooting Tip\n\n\nIf you lose  the join token, you could retrieve it using\n\n\nkubeadm token list\n\n\n\n\nOn successfully joining the master, you should see output similar to following,\n\n\nroot@kube-03:~# kubeadm join --token c04797.8db60f6b2c0dd078 159.203.170.84:6443 --discovery-token-ca-cert-hash sha256:88ebb5d5f7fdfcbbc3cde98690b1dea9d0f96de4a7e6bf69198172debca74cd0\n[kubeadm] WARNING: kubeadm is in beta, please do not use it for production clusters.\n[preflight] Running pre-flight checks\n[discovery] Trying to connect to API Server \n159.203.170.84:6443\n\n[discovery] Created cluster-info discovery client, requesting info from \nhttps://159.203.170.84:6443\n\n[discovery] Requesting info from \nhttps://159.203.170.84:6443\n again to validate TLS against the pinned public key\n[discovery] Cluster info signature and contents are valid and TLS certificate validates against pinned roots, will use API Server \n159.203.170.84:6443\n\n[discovery] Successfully established connection with API Server \n159.203.170.84:6443\n\n[bootstrap] Detected server version: v1.8.2\n[bootstrap] The server supports the Certificates API (certificates.k8s.io/v1beta1)\n\nNode join complete:\n* Certificate signing request sent to master and response\n  received.\n* Kubelet informed of new secure connection details.\n\nRun 'kubectl get nodes' on the master to see this machine join.\n\n\n\n\nSetup the admin client - Kubectl\n\n\nOn Master Node\n\n\nmkdir -p $HOME/.kube\nsudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config\nsudo chown $(id -u):$(id -g) $HOME/.kube/config\n\n\n\n\nInstalling Weave Overlay Network.\n\n\nInstalling overlay network is necessary for the pods to communicate with each other across the hosts. It is necessary to do this before you try to deploy any applications to your cluster.\n\n\nThere are various overlay networking drivers available for kubernetes. We are going to use \nWeave Net\n.\n\n\n\nexport kubever=$(kubectl version | base64 | tr -d '\\n')\nkubectl apply -f \nhttps://cloud.weave.works/k8s/net?k8s-version=$kubever\n\n\n\n\n\nValidate Master and Nodes Setup\n\n\nYou could validate the status of this cluster, health of pods and whether all the components are up or not by using a few or all of the following commands.\n\n\nTo check if nodes are ready\n\n\nkubectl get nodes\n\n\n\n\n\n[ Expected output ]\n\n\nroot@kube-01:~# kubectl get nodes\nNAME      STATUS    ROLES     AGE       VERSION\nkube-01   Ready     master    9m        v1.8.2\nkube-02   Ready     \nnone\n    4m        v1.8.2\nkube-03   Ready     \nnone\n    4m        v1.8.2\n\n\n\n\nAdditional Status Commands\n\n\nkubectl cluster-info\n\nkubectl get pods -n kube-system\n\nkubectl get events\n\n\n\n\n\nIt will take a few minutes to have the cluster up and running with all the services.\n\n\nPossible Issues\n\n\n\n\nNodes are node in Ready status\n\n\nkube-dns is crashing constantly\n\n\nSome of the systems services are not up\n\n\n\n\nMost of the times, kubernetes does self heal, unless its a issue with system resources not being adequate. Upgrading resources or launching it on bigger capacity VM/servers solves it. However, if the issues persist, you could try following techniques,\n\n\nTroubleshooting Tips\n\n\nCheck events\n\n\nkubectl get events\n\n\n\n\nCheck Logs\n\n\nkubectl get pods -n kube-system\n\n[get the name of the pod which has a problem]\n\nkubectl logs \npod\n -n kube-system\n\n\n\n\n\ne.g.\n\n\nroot@kube-01:~# kubectl logs kube-dns-545bc4bfd4-dh994 -n kube-system\nError from server (BadRequest): a container name must be specified for pod kube-dns-545bc4bfd4-dh994, choose one of:\n[kubedns dnsmasq sidecar]\n\n\nroot@kube-01:~# kubectl logs kube-dns-545bc4bfd4-dh994  kubedns  -n kube-system\nI1106 14:41:15.542409       1 dns.go:48] version: 1.14.4-2-g5584e04\nI1106 14:41:15.543487       1 server.go:70] Using\n\n....\n\n\n\n\n\nEnable Kubernetes Dashboard\n\n\nAfter the Pod networks is installled, We can install another add-on service which is Kubernetes Dashboard.\n\n\nInstalling Dashboard:\n\n\nkubectl apply -f https://gist.githubusercontent.com/initcron/32ff89394c881414ea7ef7f4d3a1d499/raw/baffda78ffdcaf8ece87a76fb2bb3fd767820a3f/kube-dashboard.yaml\n\n\n\n\n\nThis will create a pod for the Kubernetes Dashboard.\n\n\nTo access the Dashboard in th browser, run the below command\n\n\nkubectl describe svc kubernetes-dashboard -n kube-system\n\n\n\n\nSample output:\n\n\nkubectl describe svc kubernetes-dashboard -n kube-system\nName:                   kubernetes-dashboard\nNamespace:              kube-system\nLabels:                 app=kubernetes-dashboard\nSelector:               app=kubernetes-dashboard\nType:                   NodePort\nIP:                     10.98.148.82\nPort:                   \nunset\n 80/TCP\nNodePort:               \nunset\n 32756/TCP\nEndpoints:              10.40.0.1:9090\nSession Affinity:       None\n\n\n\n\nNow check for the node port, here it is 32756, and go to the browser,\n\n\nmasterip:32756\n\n\n\n\nThe Dashboard Looks like:", 
+            "title": "Install Kubernetes"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#kubernetes", 
+            "text": "Kubernetes is an open-source system for automating deployment, scaling, and management of containerized applications.  The below steps are applicabe for the below mentioned OS     OS  Version  Codename      Ubuntu  16.04  Xenial", 
+            "title": "Kubernetes"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#base-setup", 
+            "text": "On all nodes which would be part of this cluster, you need to do the base setup as described on  This Page", 
+            "title": "Base Setup"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#initialization-of-master", 
+            "text": "This tutorial assumes  kube-01   as the master and used kubeadm as a tool to install and setup the cluster. This section also assumes that you are using vagrant based setup provided along with this tutorial. If not, please update the IP address of the master accordingly.  To initialize master, run this on kube-01  kubeadm init --apiserver-advertise-address 192.168.12.10 --pod-network-cidr=192.168.0.0/16", 
+            "title": "Initialization of Master:"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#initialization-of-the-nodes-previously-minions", 
+            "text": "After master being initialized, it should display the command which could be used on all worker/nodes to join the k8s cluster.  e.g.  kubeadm join --token c04797.8db60f6b2c0dd078 192.168.12.10:6443 --discovery-token-ca-cert-hash sha256:88ebb5d5f7fdfcbbc3cde98690b1dea9d0f96de4a7e6bf69198172debca74cd0  Copy and paste it on all node.", 
+            "title": "Initialization of the Nodes (Previously Minions)"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#troubleshooting-tip", 
+            "text": "If you lose  the join token, you could retrieve it using  kubeadm token list  On successfully joining the master, you should see output similar to following,  root@kube-03:~# kubeadm join --token c04797.8db60f6b2c0dd078 159.203.170.84:6443 --discovery-token-ca-cert-hash sha256:88ebb5d5f7fdfcbbc3cde98690b1dea9d0f96de4a7e6bf69198172debca74cd0\n[kubeadm] WARNING: kubeadm is in beta, please do not use it for production clusters.\n[preflight] Running pre-flight checks\n[discovery] Trying to connect to API Server  159.203.170.84:6443 \n[discovery] Created cluster-info discovery client, requesting info from  https://159.203.170.84:6443 \n[discovery] Requesting info from  https://159.203.170.84:6443  again to validate TLS against the pinned public key\n[discovery] Cluster info signature and contents are valid and TLS certificate validates against pinned roots, will use API Server  159.203.170.84:6443 \n[discovery] Successfully established connection with API Server  159.203.170.84:6443 \n[bootstrap] Detected server version: v1.8.2\n[bootstrap] The server supports the Certificates API (certificates.k8s.io/v1beta1)\n\nNode join complete:\n* Certificate signing request sent to master and response\n  received.\n* Kubelet informed of new secure connection details.\n\nRun 'kubectl get nodes' on the master to see this machine join.", 
+            "title": "Troubleshooting Tip"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#setup-the-admin-client-kubectl", 
+            "text": "On Master Node  mkdir -p $HOME/.kube\nsudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config\nsudo chown $(id -u):$(id -g) $HOME/.kube/config", 
+            "title": "Setup the admin client - Kubectl"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#installing-weave-overlay-network", 
+            "text": "Installing overlay network is necessary for the pods to communicate with each other across the hosts. It is necessary to do this before you try to deploy any applications to your cluster.  There are various overlay networking drivers available for kubernetes. We are going to use  Weave Net .  \nexport kubever=$(kubectl version | base64 | tr -d '\\n')\nkubectl apply -f  https://cloud.weave.works/k8s/net?k8s-version=$kubever", 
+            "title": "Installing Weave Overlay Network."
+        }, 
+        {
+            "location": "/1. install_kubernetes/#validate-master-and-nodes-setup", 
+            "text": "You could validate the status of this cluster, health of pods and whether all the components are up or not by using a few or all of the following commands.  To check if nodes are ready  kubectl get nodes  [ Expected output ]  root@kube-01:~# kubectl get nodes\nNAME      STATUS    ROLES     AGE       VERSION\nkube-01   Ready     master    9m        v1.8.2\nkube-02   Ready      none     4m        v1.8.2\nkube-03   Ready      none     4m        v1.8.2  Additional Status Commands  kubectl cluster-info\n\nkubectl get pods -n kube-system\n\nkubectl get events  It will take a few minutes to have the cluster up and running with all the services.", 
+            "title": "Validate Master and Nodes Setup"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#possible-issues", 
+            "text": "Nodes are node in Ready status  kube-dns is crashing constantly  Some of the systems services are not up   Most of the times, kubernetes does self heal, unless its a issue with system resources not being adequate. Upgrading resources or launching it on bigger capacity VM/servers solves it. However, if the issues persist, you could try following techniques,  Troubleshooting Tips  Check events  kubectl get events  Check Logs  kubectl get pods -n kube-system\n\n[get the name of the pod which has a problem]\n\nkubectl logs  pod  -n kube-system  e.g.  root@kube-01:~# kubectl logs kube-dns-545bc4bfd4-dh994 -n kube-system\nError from server (BadRequest): a container name must be specified for pod kube-dns-545bc4bfd4-dh994, choose one of:\n[kubedns dnsmasq sidecar]\n\n\nroot@kube-01:~# kubectl logs kube-dns-545bc4bfd4-dh994  kubedns  -n kube-system\nI1106 14:41:15.542409       1 dns.go:48] version: 1.14.4-2-g5584e04\nI1106 14:41:15.543487       1 server.go:70] Using\n\n....", 
+            "title": "Possible Issues"
+        }, 
+        {
+            "location": "/1. install_kubernetes/#enable-kubernetes-dashboard", 
+            "text": "After the Pod networks is installled, We can install another add-on service which is Kubernetes Dashboard.  Installing Dashboard:  kubectl apply -f https://gist.githubusercontent.com/initcron/32ff89394c881414ea7ef7f4d3a1d499/raw/baffda78ffdcaf8ece87a76fb2bb3fd767820a3f/kube-dashboard.yaml  This will create a pod for the Kubernetes Dashboard.  To access the Dashboard in th browser, run the below command  kubectl describe svc kubernetes-dashboard -n kube-system  Sample output:  kubectl describe svc kubernetes-dashboard -n kube-system\nName:                   kubernetes-dashboard\nNamespace:              kube-system\nLabels:                 app=kubernetes-dashboard\nSelector:               app=kubernetes-dashboard\nType:                   NodePort\nIP:                     10.98.148.82\nPort:                    unset  80/TCP\nNodePort:                unset  32756/TCP\nEndpoints:              10.40.0.1:9090\nSession Affinity:       None  Now check for the node port, here it is 32756, and go to the browser,  masterip:32756  The Dashboard Looks like:", 
+            "title": "Enable Kubernetes Dashboard"
+        }
+    ]
+}
