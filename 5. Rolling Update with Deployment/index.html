@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Rollouts, Rollbacks and Rolling Updates - Kubernetes Fundamentals</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Rollouts, Rollbacks and Rolling Updates";
+    var mkdocs_page_input_path = "5. Rolling Update with Deployment.md";
+    var mkdocs_page_url = "/5. Rolling Update with Deployment/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Kubernetes Fundamentals</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../kube-cluster-vagrant/">Provisioning VMs with Vagrant</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../1. install_kubernetes/">Setup Kubernetes Cluster</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../configs/">Configuring Cluster</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../deploying_pods/">Launching Pods</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../2. kubernetes_deployment/">Creating Deployments</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../exposing_app_with_service/">Service Endpoints</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Rollouts, Rollbacks and Rolling Updates</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#rolling-updates-with-deployments">Rolling Updates with Deployments</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#creating-a-deployment">Creating a Deployment</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../6. Kubernetes Autoscaling/">Auto Scaling Capacity with HPA</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../6. deploying_sample_app/">Mini Project</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Kubernetes Fundamentals</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Rollouts, Rollbacks and Rolling Updates</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="rolling-updates-with-deployments">Rolling Updates with Deployments</h1>
+<p>A rolling update works by:
+1. Creating a new replication controller with the updated configuration.
+2. Increasing/decreasing the replica count on the new and old controllers until the correct number of replicas is reachedor by updating the version of the pod which is running.</p>
+<h3 id="creating-a-deployment">Creating a Deployment</h3>
+<p>Create a yaml file for the deployment.</p>
+<p>We already have a yaml file to create a deployment "vote_dep.yaml"
+Now create the Deployment</p>
+<pre><code>kubectl create -f vote_dep.yaml --record
+</code></pre>
+
+<p>Now the deployment is created. To check it,</p>
+<pre><code>kubectl get deployment
+</code></pre>
+
+<p>Sample Output</p>
+<pre><code>kubectl get deployment
+NAME          DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+voting-appp   1         1         1            1           19s
+</code></pre>
+
+<h4 id="creating-a-service-for-it">Creating a Service for it</h4>
+<p>Now to create a service:</p>
+<pre><code>kubectl create -f voting-app-service.yaml --record
+</code></pre>
+
+<p>Sample Output:</p>
+<pre><code>kubectl create -f voting-app-service.yaml --record
+service &quot;voting-appp&quot; created
+</code></pre>
+
+<p>Now to check which port the pod is connected</p>
+<pre><code>kubectl describe service voting-appp
+</code></pre>
+
+<p>Check for the Nodeport here</p>
+<p>Sample Output</p>
+<pre><code>kubectl describe service voting-appp
+Name:                   voting-appp
+Namespace:              default
+Labels:                 run=voting-appp
+Selector:               run=voting-appp
+Type:                   LoadBalancer
+IP:                     10.107.126.18
+Port:                   &lt;unset&gt; 80/TCP
+NodePort:               &lt;unset&gt; 30410/TCP
+Endpoints:              10.40.0.23:80
+Session Affinity:       None
+No events.
+</code></pre>
+
+<p>Go to browser and check hostip:NodePort</p>
+<p>Here the node port is 30410.</p>
+<p>Sample output will be:</p>
+<p><img alt="alt text" src="../images/RC-Nginx.PNG" title="Nginx Page" /></p>
+<h4 id="rolling-update">Rolling update</h4>
+<p>Now we can see in the RC yaml file that the pods are running with the version of image : venkatsudharsanam/votingapp-python:8.0.0.</p>
+<p>Lets try upgrading our pods to the version venkatsudharsanam/votingapp-python:10.0.0 without deleting the RC or the pods.
+That's how the rolling updates helps in Kubernetes.</p>
+<p>Create a new file</p>
+<pre><code>vi voting-app-deployment1.yaml
+</code></pre>
+
+<p>Now paste the below line in the yaml file</p>
+<pre><code>apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: vote
+  namespace: dev
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: front
+      app: vote
+    matchExpressions:
+      - {key: tier, operator: In, values: [front]}
+  minReadySeconds: 20
+  template:
+    metadata:
+      labels:
+        app: vote
+        role: ui
+        tier: front
+    spec:
+      containers:
+      - image: schoolofdevops/vote
+        imagePullPolicy: Always
+        name: vote
+        ports:
+        - containerPort: 80
+          protocol: TCP
+</code></pre>
+
+<p>And save the file.</p>
+<p>Now to Roll out our update:</p>
+<pre><code>kubectl apply -f voting-app-deployment1.yaml --record
+</code></pre>
+
+<p>Now go to the browser and reload the page. You will see the below output:</p>
+<p><img alt="alt text" src="../images/RC-Vote.PNG" title="Vote Page" /></p>
+<p>Now delete all the deployment and services</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../6. Kubernetes Autoscaling/" class="btn btn-neutral float-right" title="Auto Scaling Capacity with HPA">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../exposing_app_with_service/" class="btn btn-neutral" title="Service Endpoints"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../exposing_app_with_service/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../6. Kubernetes Autoscaling/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
+
+</body>
+</html>
