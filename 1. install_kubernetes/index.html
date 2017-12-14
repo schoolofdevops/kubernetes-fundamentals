@@ -238,7 +238,7 @@ EOF
 </code></pre>
 
 <p>Copy and paste it on all node.</p>
-<h5 id="troubleshooting-tip">Troubleshooting Tip</h5>
+<h5 id="troubleshooting-tips">Troubleshooting Tips</h5>
 <p>If you lose  the join token, you could retrieve it using</p>
 <pre><code>kubeadm token list
 </code></pre>
@@ -294,7 +294,9 @@ kube-03   Ready     &lt;none&gt;    4m        v1.8.2
 </code></pre>
 
 <p>Additional Status Commands</p>
-<pre><code>kubectl cluster-info
+<pre><code>kubectl version
+
+kubectl cluster-info
 
 kubectl get pods -n kube-system
 
