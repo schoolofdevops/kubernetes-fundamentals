@@ -217,7 +217,7 @@ spec:
 </code></pre>
 
 <p>Lets now create the  Pod config by adding the kind and specs to above schema.</p>
-<p>Filename: vote_pod.yaml</p>
+<p>Filename: vote-pod.yaml</p>
 <pre><code>apiVersion: v1
 kind: Pod
 metadata:
@@ -240,7 +240,7 @@ spec:
 </code></pre>
 
 <p>To Launch pod using configs above,</p>
-<pre><code>kubectl apply -f vote_pod.yaml
+<pre><code>kubectl apply -f vote-pod.yaml
 
 </code></pre>
 
@@ -321,7 +321,7 @@ kubectl get pods
 <p>Volumes are of two types:
   * emptyDir
   * hostPath</p>
-<p>File: db_pod.yaml</p>
+<p>File: db-pod.yaml</p>
 <pre><code>apiVersion: v1
 kind: Pod
 metadata:
@@ -346,7 +346,7 @@ spec:
 </code></pre>
 
 <p>To create this pod,</p>
-<pre><code>kubectl apply -f db_pod.yaml
+<pre><code>kubectl apply -f db-pod.yaml
 
 kubectl describe pod db
 
@@ -363,7 +363,7 @@ kubectl get nodes --show-labels
 </code></pre>
 
 <p>Update pod definition with nodeSelector</p>
-<p>file: vote_pod.yml</p>
+<p>file: vote-pod.yml</p>
 <pre><code>apiVersion: v1
 kind: Pod
 metadata:
@@ -383,7 +383,7 @@ spec:
 </code></pre>
 
 <p>For this change, pod needs to be re created.</p>
-<pre><code>kubectl apply -f vote_pod.yaml
+<pre><code>kubectl apply -f vote-pod.yaml
 </code></pre>
 
 <h2 id="creating-multi-container-pods">Creating Multi Container Pods</h2>

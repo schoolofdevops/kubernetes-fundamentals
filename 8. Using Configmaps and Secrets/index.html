@@ -92,15 +92,10 @@
     <a class="current" href="./">Using Configmaps and Secrets</a>
     <ul class="subnav">
             
-    <li class="toctree-l2"><a href="#configmaps">Configmaps</a></li>
+    <li class="toctree-l2"><a href="#injecting-env-variables-with-configmaps">Injecting env variables with configmaps</a></li>
     
-        <ul>
-        
-            <li><a class="toctree-l3" href="#confgimap-as-environment-variables">Confgimap as Environment Variables</a></li>
-        
-            <li><a class="toctree-l3" href="#configmap-as-a-configuration-file">Configmap as a configuration file</a></li>
-        
-        </ul>
+
+    <li class="toctree-l2"><a href="#configmap-as-a-configuration-file">Configmap as a configuration file</a></li>
     
 
     <li class="toctree-l2"><a href="#secrets">Secrets</a></li>
@@ -161,13 +156,11 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="configmaps">Configmaps</h2>
-<p>Configmap is one of the ways to provide configurations to your application.</p>
-<h3 id="confgimap-as-environment-variables">Confgimap as Environment Variables</h3>
+                <p>Configmap is one of the ways to provide configurations to your application.</p>
+<h3 id="injecting-env-variables-with-configmaps">Injecting env variables with configmaps</h3>
 <p>Create our configmap for vote app</p>
-<pre><code>vim apps/voting/dev/vote-configmap.yaml
-
-apiVersion: v1
+<p>file:  apps/voting/dev/vote-cm.yaml</p>
+<pre><code>apiVersion: v1
 kind: ConfigMap
 metadata:
   name: vote
@@ -183,26 +176,7 @@ data:
 <p>In order to use this configmap in the deployment, we need to reference it from the deployment file.
 Check the deployment file for vote add for the following block.</p>
 <p>file: <code>vote-deploy.yaml</code></p>
-<pre><code>apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: vote
-  namespace: dev
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      tier: front
-      app: vote
-    matchExpressions:
-      - {key: tier, operator: In, values: [front]}
-  minReadySeconds: 20
-  template:
-    metadata:
-      labels:
-        app: vote
-        role: ui
-        tier: front
+<pre><code>...
     spec:
       containers:
       - image: schoolofdevops/vote
@@ -220,48 +194,29 @@ spec:
 <p>So when you create your deployment, these configurations will be made available to your application. In this example, the values defined in the configmap (EMACS and VI) will override the default values(CATS and DOGS) present in your source code.</p>
 <p><img alt="configmap" src="../images/Configmap.png" title="ConfigMap" /></p>
 <h3 id="configmap-as-a-configuration-file">Configmap as a configuration file</h3>
-<p>In the last topic we have seen how to use configmap as environment variables. Now let us see how to use configmap as redis configuration file.</p>
-<p>We have redis configuration as a file named <code>apps/voting/config/redis.conf</code>. We are going to convert this file into a configmap</p>
-<pre><code>Syntax:
-  kubectl create configmap --from-file &lt;CONF-FILE-PATH&gt; &lt;NAME-OF-CONFIGMAP&gt;
+<p>In the  topic above we have seen how to use configmap as environment variables. Now let us see how to use configmap as redis configuration file.</p>
+<p>Syntax for consuming file as a configmap is as follows</p>
+<pre><code>  kubectl create configmap --from-file &lt;CONF-FILE-PATH&gt; &lt;NAME-OF-CONFIGMAP&gt;
+</code></pre>
 
-kubectl create configmap --from-file apps/voting/config/redis.conf redis
+<p>We have redis configuration as a file named <code>apps/voting/config/redis.conf</code>. We are going to convert this file into a configmap</p>
+<pre><code>kubectl create configmap --from-file apps/voting/config/redis.conf redis
 </code></pre>
 
 <p>Update your redis-deploy.yaml file to use this confimap.
 File: <code>redis-deploy.yaml</code></p>
-<pre><code>apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: redis
-  namespace: dev
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      tier: back
-      app: xxxx
-    matchExpressions:
-      - {key: tier, operator: In, values: [back]}
-  minReadySeconds: 20
-  template:
-    metadata:
-      labels:
-        app: xxxx
-        role: xxxx
-        tier: back
-    spec:
+<pre><code>    spec:
       containers:
-      - image: xxxx
+      - image: schoolofdevops/redis:latest
         imagePullPolicy: Always
-        name: xxxx
+        name: redis
         ports:
-        - containerPort: xxxx
+        - containerPort: 6379
           protocol: TCP
         volumeMounts:
           - name: redis
-            mountPath: /etc/redis.conf
             subPath: redis.conf
+            mountPath: /etc/redis.conf
       volumes:
       - name: redis
         configMap:
@@ -271,10 +226,22 @@ spec:
 
 <h2 id="secrets">Secrets</h2>
 <p>Secrets are for storing sensitive data like <em>passwords and keychains</em>. We will see how db deployment uses username and password in form of a secret.</p>
-<p>To create secret for db,</p>
-<pre><code>vim apps/voting/dev/db-secret.yaml
+<p>You would define two fields for db,
+  * username
+  * password</p>
+<p>To create secrets for db you need to generate  <em>base64</em> format as follows,</p>
+<pre><code>echo &quot;admin&quot; | base64
+echo &quot;password&quot; | base64
+</code></pre>
 
-apiVersion: v1
+<p>where <strong>admin</strong> and <strong>password</strong> are the actual values that you would want to inject into the pod environment.</p>
+<p>If you do not have a unix host, you can make use of online base64 utility to generate these strings.</p>
+<pre><code>http://www.utilities-online.info/base64
+</code></pre>
+
+<p>Lets now add it to the secrets file,</p>
+<p>File: apps/voting/dev/db-secrets.yaml</p>
+<pre><code>apiVersion: v1
 kind: Secret
 metadata:
   name: db
@@ -287,17 +254,8 @@ data:
   # base64 of password
 </code></pre>
 
-<p>As you can see, we cannot use the values directly. We will need to convert them into <em>base64</em> version and use it.</p>
-<p>To create base64 encrypted strings, run</p>
-<pre><code>echo &quot;admin&quot; | base64
-echo &quot;password&quot; | base64
-</code></pre>
-
-<p>If you do not have linux machines, you can make use of online base64 utility.</p>
-<pre><code>http://www.utilities-online.info/base64
-</code></pre>
-
-<p>Add this block of code under <code>container spec</code> of your db-deploy.yaml.</p>
+<p>To consume these secrets, update the deployment as</p>
+<p>file: db-deploy.yaml.</p>
 <pre><code>apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
