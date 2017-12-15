@@ -155,27 +155,34 @@
               
                 <h2 id="creating-a-deployment">Creating a Deployment</h2>
 <p>A Deployment is a higher level abstraction which sits on top of replica sets and allows you to manage the way applications are deployed, rolled back at a controlled rate.</p>
-<p>Features
-  * Rollout a Replicaset
-  * Deploy a new version : Creates a new replica set every time, moves pods from RS(n) to RS(n+1)
-  * Rollback to previous RS<br />
-  * Auto Scaling
-  * Pause Deployments</p>
-<p>File: vote_deploy.yaml</p>
+<p>Topics  <br />
+  * Rollout a Replicaset<br />
+  * Deploy a new version : Creates a new replica set every time, moves pods from RS(n) to RS(n+1)<br />
+  * Rollback to previous RS    <br />
+  * Auto Scaling<br />
+  * Pause Deployments  </p>
+<p>File: vote-deploy.yaml</p>
 <pre><code>apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: vote
   namespace: dev
 spec:
-  replicas: 3
+  replicas: 8
   selector:
     matchLabels:
       tier: front
       app: vote
     matchExpressions:
       - {key: tier, operator: In, values: [front]}
+  revisionHistoryLimit: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
   minReadySeconds: 20
+  paused: false
   template:
     metadata:
       labels:
@@ -190,18 +197,35 @@ spec:
         ports:
         - containerPort: 80
           protocol: TCP
-      restartPolicy: Always
 </code></pre>
 
-<p>And save the file.</p>
-<p>Now create the Deployment</p>
+<p>Deployment spec (deployment.spec) contains the following,</p>
+<ul>
+<li>replicaset specs<ul>
+<li>selectors  </li>
+<li>replicas  </li>
+</ul>
+</li>
+<li>deployment spec<ul>
+<li>strategy</li>
+<li>rollingUpdate</li>
+<li>minReadySeconds</li>
+</ul>
+</li>
+<li>pod template<ul>
+<li>metadata, labels</li>
+<li>container specs</li>
+</ul>
+</li>
+</ul>
+<p>Lets  create the Deployment</p>
 <pre><code>kubectl apply -f vote_deploy.yaml --record
 </code></pre>
 
-<p>Now the deployment is created. To check it,</p>
-<pre><code>kubectl rollout status deployment/vote
-kubectl get deployment
+<p>Now that the deployment is created. To validate,</p>
+<pre><code>kubectl get deployment
 kubectl get rs
+kubectl rollout status deployment/vote
 kubectl get pods --show-labels
 </code></pre>
 
