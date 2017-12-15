@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Rollouts, Rollbacks and Rolling Updates - Kubernetes Fundamentals</title>
+  <title>Using Configmaps and Secrets - Kubernetes Fundamentals</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Rollouts, Rollbacks and Rolling Updates";
-    var mkdocs_page_input_path = "5. Rolling Update with Deployment.md";
-    var mkdocs_page_url = "/5. Rolling Update with Deployment/";
+    var mkdocs_page_name = "Using Configmaps and Secrets";
+    var mkdocs_page_input_path = "8. Using Configmaps and Secrets.md";
+    var mkdocs_page_url = "/8. Using Configmaps and Secrets/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -84,16 +84,21 @@
           
             <li class="toctree-l1 current">
 		
-    <a class="current" href="./">Rollouts, Rollbacks and Rolling Updates</a>
+    <a class="current" href="./">Using Configmaps and Secrets</a>
     <ul class="subnav">
             
-    <li class="toctree-l2"><a href="#rolling-updates-with-deployments">Rolling Updates with Deployments</a></li>
+    <li class="toctree-l2"><a href="#configmaps">Configmaps</a></li>
     
         <ul>
         
-            <li><a class="toctree-l3" href="#creating-a-deployment">Creating a Deployment</a></li>
+            <li><a class="toctree-l3" href="#confgimap-as-environment-variables">Confgimap as Environment Variables</a></li>
+        
+            <li><a class="toctree-l3" href="#configmap-as-a-configuration-file">Configmap as a configuration file</a></li>
         
         </ul>
+    
+
+    <li class="toctree-l2"><a href="#secrets">Secrets</a></li>
     
 
     </ul>
@@ -102,6 +107,11 @@
             <li class="toctree-l1">
 		
     <a class="" href="../6. Kubernetes Autoscaling/">Auto Scaling Capacity with HPA</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../troubleshooting/">Troubleshooting</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -136,7 +146,7 @@
     
       
     
-    <li>Rollouts, Rollbacks and Rolling Updates</li>
+    <li>Using Configmaps and Secrets</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -146,70 +156,28 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="rolling-updates-with-deployments">Rolling Updates with Deployments</h1>
-<p>A rolling update works by:
-1. Creating a new replication controller with the updated configuration.
-2. Increasing/decreasing the replica count on the new and old controllers until the correct number of replicas is reachedor by updating the version of the pod which is running.</p>
-<h3 id="creating-a-deployment">Creating a Deployment</h3>
-<p>Create a yaml file for the deployment.</p>
-<p>We already have a yaml file to create a deployment "vote_dep.yaml"
-Now create the Deployment</p>
-<pre><code>kubectl create -f vote_dep.yaml --record
+                <h2 id="configmaps">Configmaps</h2>
+<p>Configmap is one of the ways to provide configurations to your application.</p>
+<h3 id="confgimap-as-environment-variables">Confgimap as Environment Variables</h3>
+<p>Create our configmap for vote app</p>
+<pre><code>vim apps/voting/dev/vote-configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vote
+  namespace: dev
+data:
+  OPTION_A: EMACS
+  OPTION_B: VI
 </code></pre>
 
-<p>Now the deployment is created. To check it,</p>
-<pre><code>kubectl get deployment
-</code></pre>
-
-<p>Sample Output</p>
-<pre><code>kubectl get deployment
-NAME          DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-voting-appp   1         1         1            1           19s
-</code></pre>
-
-<h4 id="creating-a-service-for-it">Creating a Service for it</h4>
-<p>Now to create a service:</p>
-<pre><code>kubectl create -f voting-app-service.yaml --record
-</code></pre>
-
-<p>Sample Output:</p>
-<pre><code>kubectl create -f voting-app-service.yaml --record
-service &quot;voting-appp&quot; created
-</code></pre>
-
-<p>Now to check which port the pod is connected</p>
-<pre><code>kubectl describe service voting-appp
-</code></pre>
-
-<p>Check for the Nodeport here</p>
-<p>Sample Output</p>
-<pre><code>kubectl describe service voting-appp
-Name:                   voting-appp
-Namespace:              default
-Labels:                 run=voting-appp
-Selector:               run=voting-appp
-Type:                   LoadBalancer
-IP:                     10.107.126.18
-Port:                   &lt;unset&gt; 80/TCP
-NodePort:               &lt;unset&gt; 30410/TCP
-Endpoints:              10.40.0.23:80
-Session Affinity:       None
-No events.
-</code></pre>
-
-<p>Go to browser and check hostip:NodePort</p>
-<p>Here the node port is 30410.</p>
-<p>Sample output will be:</p>
-<p><img alt="alt text" src="../images/RC-Nginx.PNG" title="Nginx Page" /></p>
-<h4 id="rolling-update">Rolling update</h4>
-<p>Now we can see in the RC yaml file that the pods are running with the version of image : venkatsudharsanam/votingapp-python:8.0.0.</p>
-<p>Lets try upgrading our pods to the version venkatsudharsanam/votingapp-python:10.0.0 without deleting the RC or the pods.
-That's how the rolling updates helps in Kubernetes.</p>
-<p>Create a new file</p>
-<pre><code>vi voting-app-deployment1.yaml
-</code></pre>
-
-<p>Now paste the below line in the yaml file</p>
+<p>In the above given configmap, we define two environment variables,
+  1. OPTION_A=EMACS
+  2. OPTION_B=VI</p>
+<p>In order to use this configmap in the deployment, we need to reference it from the deployment file.
+Check the deployment file for vote add for the following block.</p>
+<p>file: <code>vote-deploy.yaml</code></p>
 <pre><code>apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -235,19 +203,136 @@ spec:
       - image: schoolofdevops/vote
         imagePullPolicy: Always
         name: vote
+        envFrom:
+          - configMapRef:
+              name: vote
         ports:
         - containerPort: 80
           protocol: TCP
+      restartPolicy: Always
 </code></pre>
 
-<p>And save the file.</p>
-<p>Now to Roll out our update:</p>
-<pre><code>kubectl apply -f voting-app-deployment1.yaml --record
+<p>So when you create your deployment, these configurations will be made available to your application. In this example, the values defined in the configmap (EMACS and VI) will override the default values(CATS and DOGS) present in your source code.</p>
+<p><img alt="configmap" src="../images/Configmap.png" title="ConfigMap" /></p>
+<h3 id="configmap-as-a-configuration-file">Configmap as a configuration file</h3>
+<p>In the last topic we have seen how to use configmap as environment variables. Now let us see how to use configmap as redis configuration file.</p>
+<p>We have redis configuration as a file named <code>apps/voting/config/redis.conf</code>. We are going to convert this file into a configmap</p>
+<pre><code>Syntax:
+  kubectl create configmap --from-file &lt;CONF-FILE-PATH&gt; &lt;NAME-OF-CONFIGMAP&gt;
+
+kubectl create configmap --from-file apps/voting/config/redis.conf redis
 </code></pre>
 
-<p>Now go to the browser and reload the page. You will see the below output:</p>
-<p><img alt="alt text" src="../images/RC-Vote.PNG" title="Vote Page" /></p>
-<p>Now delete all the deployment and services</p>
+<p>Update your redis-deploy.yaml file to use this confimap.
+File: <code>redis-deploy.yaml</code></p>
+<pre><code>apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: back
+      app: xxxx
+    matchExpressions:
+      - {key: tier, operator: In, values: [back]}
+  minReadySeconds: 20
+  template:
+    metadata:
+      labels:
+        app: xxxx
+        role: xxxx
+        tier: back
+    spec:
+      containers:
+      - image: xxxx
+        imagePullPolicy: Always
+        name: xxxx
+        ports:
+        - containerPort: xxxx
+          protocol: TCP
+        volumeMounts:
+          - name: redis
+            mountPath: /etc/redis.conf
+            subPath: redis.conf
+      volumes:
+      - name: redis
+        configMap:
+          name: redis
+      restartPolicy: Always
+</code></pre>
+
+<h2 id="secrets">Secrets</h2>
+<p>Secrets are for storing sensitive data like <em>passwords and keychains</em>. We will see how db deployment uses username and password in form of a secret.</p>
+<p>To create secret for db,</p>
+<pre><code>vim apps/voting/dev/db-secret.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db
+  namespace: dev
+type: Opaque
+data:
+  POSTGRES_USER: YWRtaW4=
+  # base64 of admin
+  POSTGRES_PASSWD: cGFzc3dvcmQ=
+  # base64 of password
+</code></pre>
+
+<p>As you can see, we cannot use the values directly. We will need to convert them into <em>base64</em> version and use it.</p>
+<p>To create base64 encrypted strings, run</p>
+<pre><code>echo &quot;admin&quot; | base64
+echo &quot;password&quot; | base64
+</code></pre>
+
+<p>If you do not have linux machines, you can make use of online base64 utility.</p>
+<pre><code>http://www.utilities-online.info/base64
+</code></pre>
+
+<p>Add this block of code under <code>container spec</code> of your db-deploy.yaml.</p>
+<pre><code>apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: db
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: back
+      app: postgres
+  minReadySeconds: 10
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: db
+        tier: back
+    spec:
+      containers:
+      - image: postgres:9.4
+        imagePullPolicy: Always
+        name: db
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+# Secret definition
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: db
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWD
+            valueFrom:
+              secretKeyRef:
+                name: db
+                key: POSTGRES_PASSWD
+      restartPolicy: Always
+</code></pre>
               
             </div>
           </div>

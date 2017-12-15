@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,7 +12,7 @@
     
     <url>
      <loc>/kube-cluster-vagrant/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -20,7 +20,7 @@
     
     <url>
      <loc>/1. install_kubernetes/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -28,7 +28,7 @@
     
     <url>
      <loc>/configs/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -36,7 +36,7 @@
     
     <url>
      <loc>/deploying_pods/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -44,7 +44,7 @@
     
     <url>
      <loc>/2. kubernetes_deployment/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -52,15 +52,15 @@
     
     <url>
      <loc>/exposing_app_with_service/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
     <url>
-     <loc>/5. Rolling Update with Deployment/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <loc>/8. Using Configmaps and Secrets/</loc>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -68,15 +68,7 @@
     
     <url>
      <loc>/6. Kubernetes Autoscaling/</loc>
-     <lastmod>2017-12-14</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    
-
-    
-    <url>
-     <loc>/6. deploying_sample_app/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -84,7 +76,23 @@
     
     <url>
      <loc>/troubleshooting/</loc>
-     <lastmod>2017-12-14</lastmod>
+     <lastmod>2017-12-15</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/6. deploying_sample_app/</loc>
+     <lastmod>2017-12-15</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/troubleshooting/</loc>
+     <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
