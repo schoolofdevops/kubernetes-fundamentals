@@ -59,6 +59,14 @@
 
     
     <url>
+     <loc>/rollouts-and-rollbacks/</loc>
+     <lastmod>2017-12-15</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
      <loc>/8. Using Configmaps and Secrets/</loc>
      <lastmod>2017-12-15</lastmod>
      <changefreq>daily</changefreq>

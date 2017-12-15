@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Service Endpoints - Kubernetes Fundamentals</title>
+  <title>Rollouts and Rollbacks - Kubernetes Fundamentals</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Service Endpoints";
-    var mkdocs_page_input_path = "exposing_app_with_service.md";
-    var mkdocs_page_url = "/exposing_app_with_service/";
+    var mkdocs_page_name = "Rollouts and Rollbacks";
+    var mkdocs_page_input_path = "rollouts-and-rollbacks.md";
+    var mkdocs_page_url = "/rollouts-and-rollbacks/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -77,20 +77,23 @@
     <a class="" href="../2. kubernetes_deployment/">Creating Deployments</a>
 	    </li>
           
+            <li class="toctree-l1">
+		
+    <a class="" href="../exposing_app_with_service/">Service Endpoints</a>
+	    </li>
+          
             <li class="toctree-l1 current">
 		
-    <a class="current" href="./">Service Endpoints</a>
+    <a class="current" href="./">Rollouts and Rollbacks</a>
     <ul class="subnav">
             
-    <li class="toctree-l2"><a href="#exposing-application-with-a-service">Exposing Application with  a Service</a></li>
+    <li class="toctree-l2"><a href="#rolling-updates-with-deployments">Rolling updates with deployments</a></li>
+    
+
+    <li class="toctree-l2"><a href="#rolling-back-a-failed-update">Rolling Back a Failed Update</a></li>
     
 
     </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../rollouts-and-rollbacks/">Rollouts and Rollbacks</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -140,7 +143,7 @@
     
       
     
-    <li>Service Endpoints</li>
+    <li>Rollouts and Rollbacks</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -150,72 +153,88 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="exposing-application-with-a-service">Exposing Application with  a Service</h2>
-<p>Types of Services:
-  * ClusterIP
-  * NodePort
-  * LoadBalancer
-  * ExternalName</p>
-<pre><code>kubectl get pods
-kubectl get svc
+                <h2 id="rolling-updates-with-deployments">Rolling updates with deployments</h2>
+<p>Update the version of the image in vote_deploy.yaml</p>
+<p>File: vote_deploy.yaml</p>
+<pre><code>...
+        app: vote
+    spec:
+      containers:
+      - image: schoolofdevops/vote:movies
+
 </code></pre>
 
-<p>Sample Output:</p>
-<pre><code>NAME                READY     STATUS    RESTARTS   AGE
-voting-appp-1j52x   1/1       Running   0          12m
-voting-appp-pr2xz   1/1       Running   0          9m
-voting-appp-qpxbm   1/1       Running   0          15m
+<p>Apply Changes and monitor the rollout</p>
+<pre><code>kubectl apply -f vote-deploy.yaml
+kubectl rollout status deployment/vote
 </code></pre>
 
-<p>Filename: vote-svc.yaml</p>
-<pre><code>---
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    role: svc
-    tier: front
-  name: vote-svc
-  namespace: dev
-spec:
-  selector:
+<h2 id="rolling-back-a-failed-update">Rolling Back a Failed Update</h2>
+<p>Lets update the image to a tag which us non existant. We introduce this intentional error to fail fail the deployment.</p>
+<p>File: vote_deploy.yaml</p>
+<pre><code>...
     app: vote
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 80
-  type: NodePort
+    spec:
+      containers:
+      - image: schoolofdevops/vote:movi
+
 </code></pre>
 
-<p>Save the file.</p>
-<p>Now to create a service:</p>
-<pre><code>kubectl create -f vote_svc.yaml
-kubectl get svc
+<p>Do a new rollout and monitor</p>
+<pre><code>kubectl apply -f vote_deploy.yaml
+kubectl rollout status deployment/vote
 </code></pre>
 
-<p>Now to check which port the pod is connected</p>
-<pre><code>kubectl describe service vote-svc
+<p>Also watch the pod status which might look like</p>
+<pre><code>vote-3040199436-sdq17   1/1       Running            0          9m
+vote-4086029260-0vjjb   0/1       ErrImagePull       0          16s
+vote-4086029260-zvgmd   0/1       ImagePullBackOff   0          15s
+vote-rc-fsdsd               1/1       Running            0          27m
+vote-rc-mcxs5               1/1       Running            0
 </code></pre>
 
-<p>Check for the Nodeport here</p>
-<p>Sample Output</p>
-<pre><code>Name:                   vote-svc
-Namespace:              dev
-Labels:                 app=vote
-Selector:               app=vote
-Type:                   NodePort
-IP:                     10.99.147.158
-Port:                   &lt;unset&gt; 80/TCP
-NodePort:               &lt;unset&gt; 30308/TCP
-Endpoints:              10.40.0.2:80,10.40.0.3:80,10.40.0.4:80 + 1 more...
-Session Affinity:       None
-No events.
+<p>To get the revision history and details  </p>
+<pre><code>kubectl rollout history deployment/vote
+kubectl rollout history deployment/vote --revision=x
+[replace x with the latest revision]
 </code></pre>
 
-<p>Go to browser and check hostip:NodePort</p>
-<p>Here the node port is 30308.</p>
-<p>Sample output will be:</p>
-<p><img alt="alt text" src="../images/Vote.png" title="Voting APP" /></p>
+<p>[Sample Output]</p>
+<pre><code>root@kube-01:~# kubectl rollout history deployment/vote
+deployments &quot;vote&quot;
+REVISION    CHANGE-CAUSE
+1       kubectl scale deployment/vote --replicas=5
+3       &lt;none&gt;
+6       &lt;none&gt;
+7       &lt;none&gt;
+
+root@kube-01:~# kubectl rollout history deployment/vote --revision=7
+deployments &quot;vote&quot; with revision #7
+Pod Template:
+  Labels:   app=vote
+    env=dev
+    pod-template-hash=4086029260
+    role=ui
+    stack=voting
+    tier=front
+  Containers:
+   vote:
+    Image:  schoolofdevops/vote:movi
+    Port:   80/TCP
+    Environment:    &lt;none&gt;
+    Mounts: &lt;none&gt;
+  Volumes:  &lt;none&gt;
+</code></pre>
+
+<p>To undo rollout,</p>
+<pre><code>kubectl rollout undo deployment/vote
+</code></pre>
+
+<p>or</p>
+<pre><code>kubectl rollout undo deployment/vote --to-revision=1
+kubectl get rs
+kubectl describe deployment vote
+</code></pre>
               
             </div>
           </div>
@@ -223,10 +242,10 @@ No events.
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../rollouts-and-rollbacks/" class="btn btn-neutral float-right" title="Rollouts and Rollbacks">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../8. Using Configmaps and Secrets/" class="btn btn-neutral float-right" title="Using Configmaps and Secrets">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../2. kubernetes_deployment/" class="btn btn-neutral" title="Creating Deployments"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../exposing_app_with_service/" class="btn btn-neutral" title="Service Endpoints"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -252,10 +271,10 @@ No events.
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../2. kubernetes_deployment/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../exposing_app_with_service/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../rollouts-and-rollbacks/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../8. Using Configmaps and Secrets/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
